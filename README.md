@@ -11,3 +11,5 @@ Usage:
 
 The button will use Unity's sprite shape by default. If that's not fitting very well, or you want a custom one (i.e. no holes in the middle, padding):
 - Go to the texture's properties and use the Shape Editor do draw the clickable area.
+
+Because this component uses hit-testing with triangles on the button, you could extend it with functionality to test other shapes as well.
