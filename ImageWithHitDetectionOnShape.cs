@@ -13,7 +13,7 @@ public class ImageWithHitDetectionOnShape : Image
 
 	Vector2 GetSizeForCalc()
 	{
-		if (preserveAspect && (type == Image.Type.Simple || type == Image.Type.Filled))
+		if (preserveAspect && (type == Type.Simple || type == Type.Filled))
 		{
 			return sprite.rect.size * Mathf.Min(rectTransform.sizeDelta.x / sprite.rect.width, rectTransform.sizeDelta.y / sprite.rect.height);
 		}
@@ -39,21 +39,17 @@ public class ImageWithHitDetectionOnShape : Image
 		}
 
 		var size = GetSizeForCalc();
-		var pointInSpriteSpace = localPos;
-		pointInSpriteSpace *= sprite.bounds.extents.xy() * 2 / size;
-		pointInSpriteSpace -= Vector2.one;
-		pointInSpriteSpace += rectTransform.pivot * 2;
-		pointInSpriteSpace += sprite.textureRectOffset / Vec.xy(sprite.texture.width, sprite.texture.height);
-		pointInSpriteSpace += sprite.bounds.center.xy();
+		var pointInSpriteSpace = ToSpritePoint(localPos, size);
+		var redistribute = GetRedistribution(size);
 
 #if DEVELOP_HIT_DETECTION
 		m_CalculatedPointInSprite = pointInSpriteSpace;
 #endif // DEVELOP_HIT_DETECTION
 		for (var i = 0; i < tris.Length; i += 3)
 		{
-			var a = verts[tris[i + 0]];
-			var b = verts[tris[i + 1]];
-			var c = verts[tris[i + 2]];
+			var a = redistribute(MeshVertToSprite(verts[tris[i + 0]]));
+			var b = redistribute(MeshVertToSprite(verts[tris[i + 1]]));
+			var c = redistribute(MeshVertToSprite(verts[tris[i + 2]]));
 			if (IsPointInTriangle(pointInSpriteSpace, a, b, c))
 			{
 #if DEVELOP_HIT_DETECTION
@@ -69,6 +65,49 @@ public class ImageWithHitDetectionOnShape : Image
 		return false;
 	}
 
+	System.Func<Vector2, Vector2> GetRedistribution(Vector2 size)
+	{
+		if (type != Type.Sliced)
+		{
+			return p => p;
+		}
+		var src = sprite.border;
+		float tw = sprite.texture.width, th = sprite.texture.height;
+		src.x /= tw;
+		src.y /= th;
+		src.z /= tw;
+		src.w /= th;
+
+		var tgt = sprite.border;
+		var fillSize = size * pixelsPerUnitMultiplier;
+		fillSize.x = Mathf.Max(fillSize.x, tgt.x + tgt.z);
+		fillSize.y = Mathf.Max(fillSize.y, tgt.y + tgt.w);
+		tgt.x /= fillSize.x;
+		tgt.y /= fillSize.y;
+		tgt.z /= fillSize.x;
+		tgt.w /= fillSize.y;
+
+		src.z = 1 - src.z;
+		src.w = 1 - src.w;
+		tgt.z = 1 - tgt.z;
+		tgt.w = 1 - tgt.w;
+
+		// This re-mapping isn't perfect, as it will distort triangles
+		// that lie in more than one quadrant of the 9-slice.
+		// But it's better than nothing.
+		return p =>
+		{
+			if (p.x <= src.x) { p.x = Maths.Relerp(p.x, 0, src.x, 0, tgt.x); }
+			else if (p.x <= src.z) { p.x = Maths.Relerp(p.x, src.x, src.z, tgt.x, tgt.z); }
+			else { p.x = Maths.Relerp(p.x, src.z, 1, tgt.z, 1); }
+
+			if (p.y <= src.y) { p.y = Maths.Relerp(p.y, 0, src.y, 0, tgt.y); }
+			else if (p.y <= src.w) { p.y = Maths.Relerp(p.y, src.y, src.w, tgt.y, tgt.w); }
+			else { p.y = Maths.Relerp(p.y, src.w, 1, tgt.w, 1); }
+			return p;
+		};
+	}
+
 #if DEVELOP_HIT_DETECTION
 	void OnGUI()
 	{
@@ -78,47 +117,77 @@ public class ImageWithHitDetectionOnShape : Image
 		DrawDebug();
 	}
 
+	public Vector2 MeshVertToSprite(Vector2 p)
+	{
+		p -= sprite.bounds.center.xy();
+		p /= sprite.bounds.size.xy();
+		p += Vec.xy(0.5f);
+		return p;
+	}
+
+	//public Vector2 SpriteToMeshVert(Vector2 p)
+	//{
+	//	p *= sprite.bounds.size.xy();
+	//	p += sprite.bounds.center.xy();
+	//	return p;
+	//}
+
+	Vector2 ToSpritePoint(Vector2 p, Vector2 size)
+	{
+		p /= size;
+		//p -= Vector2.one;
+		p += rectTransform.pivot;
+		p += sprite.textureRectOffset / Vec.xy(sprite.texture.width, sprite.texture.height);
+		return p;
+	}
+
+	Vector2 ToImagePoint(Vector2 p, Vector2 size)
+	{
+		p -= sprite.textureRectOffset / Vec.xy(sprite.texture.width, sprite.texture.height);
+		p -= rectTransform.pivot;
+		//p += Vector2.one;
+		p *= size;
+		return p;
+	}
+
+	Vector2 ToScreenPoint(Vector2 p)
+	{
+		p = transform.TransformPoint(p);
+		if (m_UsedCam)
+		{
+			p = m_UsedCam.WorldToScreenPoint(p);
+		}
+		return p;
+	}
+
 	void DrawDebug()
 	{
 		var triangles = sprite.triangles;
 		var vertices = sprite.vertices;
 
 		var size = GetSizeForCalc();
-		Vector2 ToScreenPoint(Vector2 p)
-		{
-			p -= sprite.bounds.center.xy();
-			p -= sprite.textureRectOffset / Vec.xy(sprite.texture.width, sprite.texture.height);
-			p -= rectTransform.pivot * 2;
-			p += Vector2.one;
-			p /= sprite.bounds.extents.xy() * 2 / size;
-			p = transform.TransformPoint(p);
-			if (m_UsedCam)
-			{
-				p = m_UsedCam.WorldToScreenPoint(p);
-			}
-			return p;
-		};
+		var redistribute = GetRedistribution(size);
 
 		// Draw the triangles using grabbed vertices
 		for (int i = 0; i < triangles.Length; i += 3)
 		{
 			var list = new[] {
-				vertices[triangles[i + 0]],
-				vertices[triangles[i + 1]],
-				vertices[triangles[i + 2]],
+				redistribute(MeshVertToSprite(vertices[triangles[i + 0]])),
+				redistribute(MeshVertToSprite(vertices[triangles[i + 1]])),
+				redistribute(MeshVertToSprite(vertices[triangles[i + 2]])),
 			};
 	
 			var color = IsPointInTriangle(m_CalculatedPointInSprite, list[0], list[1], list[2]) ? Color.green : Color.red;
 
 			// To see these you must view the game in the Scene tab while in Play mode
-			list.For((i, p) => list[i] = ToScreenPoint(p));
+			list.For((i, p) => list[i] = ToScreenPoint(ToImagePoint(p, size)));
 			list.For((i, p) => Debug.DrawLine(p, list.Mod(i+1), color, 0.2f));
 		}
 	
 		if (m_CalculatedPointInSprite != Vector2.zero)
 		{
 			var color = m_HitState == 2 ? Color.blue : (m_HitState == 1 ? Color.yellow : Color.gray);
-			var screenPt = ToScreenPoint(m_CalculatedPointInSprite);
+			var screenPt = ToScreenPoint(ToImagePoint(m_CalculatedPointInSprite, size));
 			Debug.DrawLine(screenPt + new Vector2(-10, 10), screenPt + new Vector2(10, -10), color, 0.2f);
 			Debug.DrawLine(screenPt + new Vector2(-10, -10), screenPt + new Vector2(10, 10), color, 0.2f);
 		}

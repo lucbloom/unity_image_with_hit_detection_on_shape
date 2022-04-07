@@ -18,12 +18,11 @@ Because this component uses hit-testing with triangles on the button, you could 
 Features:
 - Matches Image on height, scale, rotation, free-form width & height
 - Matches Image when "Preserve Aspect Ratio" is checked
-- Matches Image when "Simple" or "Filled" is selected
-- Commented out debug code to visually see how (and if) it works
+- Matches Image when "Simple", "Sliced" or "Filled" is selected
+- Commented out debug code to visually see how it works
 
 Limitations:
-- Doesn't match exactly when image type "Sliced" is selected
-- Doesn't match when image type "Repeat" is selected
+- Doesn't match when image type "Repeat" is selected. TODO: wrap input mapping to repeat.
 
 Future:
 - If someone can tell me how to get the triangle mesh for an image that has type "Slice", that would be great.
