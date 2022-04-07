@@ -1,4 +1,4 @@
-# unity_image_with_hit_detection_on_shape
+# Image With Hit Detection on Shape
 Have you ever wanted a button whose click-area tightly hugs the shape of its image?
 One solution is to turn on "Writable" on the image's texture and do an alpha hit-test. That's pretty costly however if you have a lot of those kind of buttons (it greatly increases the size of the texture both in the bundle and in memory).
 
@@ -24,3 +24,5 @@ Features:
 Limitations:
 - Doesn't match when image type "Repeat" is selected. TODO: wrap input mapping to repeat.
 - Only matches a "Sliced" button input 99.9% because of the nature of triangles that fall in multiple areas of the 9-patch. Negligible.
+
+https://thumbs.gfycat.com/EnormousCommonAngelfish-mobile.mp4
