@@ -23,6 +23,4 @@ Features:
 
 Limitations:
 - Doesn't match when image type "Repeat" is selected. TODO: wrap input mapping to repeat.
-
-Future:
-- If someone can tell me how to get the triangle mesh for an image that has type "Slice", that would be great.
+- Only matches a "Sliced" button input 99.9% because of the nature of triangles that fall in multiple areas of the 9-patch. Negligible.
