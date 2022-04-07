@@ -108,13 +108,13 @@ public class ImageWithHitDetectionOnShape : Image
 		};
 	}
 
-#if DEVELOP_HIT_DETECTION
-	void OnGUI()
+	Vector2 ToSpritePoint(Vector2 p, Vector2 size)
 	{
-		if (GUI.Button(new Rect(10.0f, 10.0f, 200.0f, 30.0f), $"Draw Debug ({m_CalculatedPointInSprite})"))
-		{
-		}
-		DrawDebug();
+		p /= size;
+		//p -= Vector2.one;
+		p += rectTransform.pivot;
+		p += sprite.textureRectOffset / Vec.xy(sprite.texture.width, sprite.texture.height);
+		return p;
 	}
 
 	public Vector2 MeshVertToSprite(Vector2 p)
@@ -125,21 +125,13 @@ public class ImageWithHitDetectionOnShape : Image
 		return p;
 	}
 
+#if DEVELOP_HIT_DETECTION
 	//public Vector2 SpriteToMeshVert(Vector2 p)
 	//{
 	//	p *= sprite.bounds.size.xy();
 	//	p += sprite.bounds.center.xy();
 	//	return p;
 	//}
-
-	Vector2 ToSpritePoint(Vector2 p, Vector2 size)
-	{
-		p /= size;
-		//p -= Vector2.one;
-		p += rectTransform.pivot;
-		p += sprite.textureRectOffset / Vec.xy(sprite.texture.width, sprite.texture.height);
-		return p;
-	}
 
 	Vector2 ToImagePoint(Vector2 p, Vector2 size)
 	{
@@ -160,8 +152,10 @@ public class ImageWithHitDetectionOnShape : Image
 		return p;
 	}
 
-	void DrawDebug()
+	void OnGUI()
 	{
+		//GUI.Button(new Rect(10.0f, 10.0f, 200.0f, 30.0f), $"Draw Debug ({m_CalculatedPointInSprite})");
+
 		var triangles = sprite.triangles;
 		var vertices = sprite.vertices;
 
