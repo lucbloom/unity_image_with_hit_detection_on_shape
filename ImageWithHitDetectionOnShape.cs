@@ -1,4 +1,3 @@
-﻿using StoryGiant.Extensions;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -179,8 +178,15 @@ public class ImageWithHitDetectionOnShape : Image
 			var color = IsPointInTriangle(m_CalculatedPointInSprite, list[0], list[1], list[2]) ? Color.green : Color.red;
 
 			// To see these you must view the game in the Scene tab while in Play mode
-			list.For((i, p) => list[i] = ToScreenPoint(ToImagePoint(p, size)));
-			list.For((i, p) => Debug.DrawLine(p, list.Mod(i+1), color, 0.2f));
+			var n = list.Length;
+			for (int i = 0; i < n; ++i)
+			{
+				list[i] = ToScreenPoint(ToImagePoint(list[i], size)));
+			}
+			for (int i = 0; i < n; ++i)
+			{
+				Debug.DrawLine(list[i], list[i%n], color, 0.2f));
+			}
 		}
 	
 		if (m_CalculatedPointInSprite != Vector2.zero)
