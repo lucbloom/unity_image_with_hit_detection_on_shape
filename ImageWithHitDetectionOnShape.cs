@@ -2,6 +2,11 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+public static class Maths
+{
+	public static float Relerp(float value, float min, float max, float v1, float v2) => Mathf.Lerp(v1, v2, Mathf.InverseLerp(min, max, value));
+}
+
 public class ImageWithHitDetectionOnShape : Image
 {
 #if DEVELOP_HIT_DETECTION
