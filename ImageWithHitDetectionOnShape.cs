@@ -117,29 +117,29 @@ public class ImageWithHitDetectionOnShape : Image
 		p /= size;
 		//p -= Vector2.one;
 		p += rectTransform.pivot;
-		p += sprite.textureRectOffset / Vec.xy(sprite.texture.width, sprite.texture.height);
+		p += sprite.textureRectOffset / new Vector2(sprite.texture.width, sprite.texture.height);
 		return p;
 	}
 
 	public Vector2 MeshVertToSprite(Vector2 p)
 	{
-		p -= sprite.bounds.center.xy();
-		p /= sprite.bounds.size.xy();
-		p += Vec.xy(0.5f);
+		p -= new Vector2(sprite.bounds.center);
+		p /= new Vector2(sprite.bounds.size);
+		p += new Vector2(0.5f, 0.5f);
 		return p;
 	}
 
 #if DEVELOP_HIT_DETECTION
 	//public Vector2 SpriteToMeshVert(Vector2 p)
 	//{
-	//	p *= sprite.bounds.size.xy();
-	//	p += sprite.bounds.center.xy();
+	//	p *= new Vector2(sprite.bounds.size);
+	//	p += new Vector2(sprite.bounds.center);
 	//	return p;
 	//}
 
 	Vector2 ToImagePoint(Vector2 p, Vector2 size)
 	{
-		p -= sprite.textureRectOffset / Vec.xy(sprite.texture.width, sprite.texture.height);
+		p -= sprite.textureRectOffset / new Vector2(sprite.texture.width, sprite.texture.height);
 		p -= rectTransform.pivot;
 		//p += Vector2.one;
 		p *= size;
